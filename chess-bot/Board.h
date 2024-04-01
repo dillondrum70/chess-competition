@@ -2,260 +2,218 @@
 #include <vector>
 #include <iostream>
 
-std::vector<int> evens = { 2, 4, 6, 8 };
-std::vector<int> odds = { 1, 3, 5, 7, 9 };
+#include "chess.hpp"
 
-class Move
+//std::vector<int> evens = { 2, 4, 6, 8 };
+//std::vector<int> odds = { 1, 3, 5, 7, 9 };
+
+enum PieceValues
+{
+	EMPTY = 0,
+	PAWN = 1,
+	ROOK = 5,
+	KNIGHT = 3,
+	BISHOP = 3,
+	QUEEN = 9,
+	KING = 500,
+};
+
+//class Move
+//{
+//public:
+//	int square;
+//	int piece;
+//
+//	/*bool operator==(const Move& other)
+//	{
+//		return (square == other.square) && (piece == other.piece);
+//	}*/
+//};
+//
+//class ChessMove : public Move
+//{
+//public:
+//	ChessMove()
+//	{
+//		square = 0;
+//		piece = 0;
+//	}
+//
+//	ChessMove(int square, int piece)
+//	{
+//		this->square = square;
+//		this->piece = piece;
+//	}
+//
+//	bool operator==(const ChessMove& other)
+//	{
+//		return (square == other.square) && (piece == other.piece);
+//	}
+//};
+//
+//// numbers can from 0 to 9 so we need 4 bits for every number
+//struct Chess
+//{
+//	// 64 bits to store the whole board
+//	// 9 numbers * 4 bits = only 36 bits are required
+//	uint64_t board = 0;
+//
+//	// numbers can go from 0 to 9
+//	uint8_t get(size_t index)
+//	{
+//		return (board >> (index * 4)) & 0b1111;
+//	}
+//
+//	void set(size_t index, uint8_t value)
+//	{
+//		board &= ~(0b1111ull << (index * 4));
+//		board |= (uint64_t(value) << (index * 4));
+//	}
+//
+//	void operator=(const Chess& rhs)
+//	{
+//		board = rhs.board;
+//	}
+//
+//	bool operator==(const Chess& rhs)
+//	{
+//		return board == rhs.board;
+//	}
+//
+//	friend bool operator==(const Chess& lhs, const Chess& rhs)
+//	{
+//		return lhs.board == rhs.board;
+//	}
+//
+//	friend std::ostream& operator<<(std::ostream& out, const Chess& board)
+//	{
+//		out << board.board;
+//		return out;
+//	}
+//};
+
+
+//class GenericBoard
+//{
+//public:
+//	bool player; // true = even, false = odd
+//
+//	virtual chess::Board MakeMove(chess::Move move) = 0;
+//
+//	virtual std::vector<chess::Move> LegalMoves() = 0;
+//
+//	virtual bool IsWin() = 0;
+//	virtual bool IsDraw() = 0;
+//	virtual float Evaluate(bool player) = 0;
+//	virtual void DisplayBoard() = 0;
+//};
+
+class ChessBoard
 {
 public:
-	int square, piece;
+	//Chess board;
+	chess::Board board;
 
-	/*bool operator==(const Move& other)
+	ChessBoard()
 	{
-		return (square == other.square) && (piece == other.piece);
+		/*for (int i = 0; i < 9; i++)
+			board.set(i, 0);
+
+		player = false;*/
+	}
+
+	ChessBoard(chess::Board b)
+	{
+		board = b;
+	}
+
+	/*ChessBoard(bool player)
+	{
+		for (int i = 0; i < 9; i++)
+			board.set(i, 0);
+
+		this->player = player;
+	}
+
+	ChessBoard(Chess board, bool player)
+	{
+		this->board = board;
+		this->player = player;
 	}*/
-};
 
-class NTTTMove : public Move
-{
-public:
-	NTTTMove()
+	ChessBoard MakeMove(chess::Move move)
 	{
-		square = 0;
-		piece = 0;
+		ChessBoard newBoard = ChessBoard(board);
+		newBoard.board.makeMove(move);
+
+		return newBoard;
 	}
 
-	NTTTMove(int square, int piece)
+	chess::Movelist LegalMoves()
 	{
-		this->square = square;
-		this->piece = piece;
+		chess::Movelist moveList;
+		chess::movegen::legalmoves(moveList, board);
+
+		return moveList;
 	}
 
-	bool operator==(const NTTTMove& other)
+	bool IsWin()
 	{
-		return (square == other.square) && (piece == other.piece);
-	}
-};
+		auto result = board.isGameOver();
 
-// numbers can from 0 to 9 so we need 4 bits for every number
-struct NTTT
-{
-	// 64 bits to store the whole board
-	// 9 numbers * 4 bits = only 36 bits are required
-	uint64_t board = 0;
-
-	// numbers can go from 0 to 9
-	uint8_t get(size_t index)
-	{
-		return (board >> (index * 4)) & 0b1111;
+		return result.second == chess::GameResult::WIN;
 	}
 
-	void set(size_t index, uint8_t value)
+	bool IsDraw()
 	{
-		board &= ~(0b1111ull << (index * 4));
-		board |= (uint64_t(value) << (index * 4));
+		auto result = board.isGameOver();
+
+		return result.second == chess::GameResult::DRAW;
 	}
 
-	void operator=(const NTTT& rhs)
+	float Evaluate(bool player)
 	{
-		board = rhs.board;
+		//TODO
+		//Implement an evaluation function
+		float val = 0;
+		chess::Color thisCol = board.sideToMove();
+
+		val += board.pieces(chess::PieceType::PAWN, thisCol).count() * PieceValues::PAWN;
+		val += board.pieces(chess::PieceType::ROOK, thisCol).count() * PieceValues::ROOK;
+		val += board.pieces(chess::PieceType::KNIGHT, thisCol).count() * PieceValues::KNIGHT;
+		val += board.pieces(chess::PieceType::BISHOP, thisCol).count() * PieceValues::BISHOP;
+		val += board.pieces(chess::PieceType::QUEEN, thisCol).count() * PieceValues::QUEEN;
+		val += board.pieces(chess::PieceType::KING, thisCol).count() * PieceValues::KING;
+
+		chess::Color otherCol = !thisCol;
+
+		val -= board.pieces(chess::PieceType::PAWN, otherCol).count() * PieceValues::PAWN;
+		val -= board.pieces(chess::PieceType::ROOK, otherCol).count() * PieceValues::ROOK;
+		val -= board.pieces(chess::PieceType::KNIGHT, otherCol).count() * PieceValues::KNIGHT;
+		val -= board.pieces(chess::PieceType::BISHOP, otherCol).count() * PieceValues::BISHOP;
+		val -= board.pieces(chess::PieceType::QUEEN, otherCol).count() * PieceValues::QUEEN;
+		val -= board.pieces(chess::PieceType::KING, otherCol).count() * PieceValues::KING;
+
+		
+		//std::cout << val << "\n";
+
+		return val;
 	}
 
-	bool operator==(const NTTT& rhs)
+	bool operator==(const ChessBoard& rhs) const
 	{
-		return board == rhs.board;
-	}
-
-	friend bool operator==(const NTTT& lhs, const NTTT& rhs)
-	{
-		return lhs.board == rhs.board;
-	}
-
-	friend std::ostream& operator<<(std::ostream& out, const NTTT& board)
-	{
-		out << board.board;
-		return out;
+		return board.occ() == rhs.board.occ();
 	}
 };
 
 namespace std
 {
 	template<>
-	struct hash<NTTT>
+	struct hash<ChessBoard>
 	{
-		size_t operator()(const NTTT& nttt) const
+		size_t operator()(const ChessBoard& board) const
 		{
-			return std::hash<uint64_t>()(nttt.board);
+			return board.board.hash();
 		}
 	};
 }
-
-template <typename move_t, typename board_t>
-requires std::is_same<move_t, NTTTMove>::value
-class Board
-{
-public:
-	bool player; // true = even, false = odd
-
-	board_t MakeMove(move_t move);
-
-	std::vector<move_t> LegalMoves();
-
-	bool IsWin();
-	bool IsDraw();
-	float Evaluate(bool player);
-	void DisplayBoard();
-};
-
-class NTTTBoard : public Board<NTTTMove, NTTTBoard>
-{
-public:
-	NTTT board;
-
-	NTTTBoard()
-	{
-		for (int i = 0; i < 9; i++)
-			board.set(i, 0);
-
-		player = false;
-	}
-
-	NTTTBoard(bool player)
-	{
-		for (int i = 0; i < 9; i++)
-			board.set(i, 0);
-
-		this->player = player;
-	}
-
-	NTTTBoard(NTTT board, bool player)
-	{
-		this->board = board;
-		this->player = player;
-	}
-
-	NTTTBoard MakeMove(NTTTMove move)
-	{
-		NTTT newBoard = board;
-		newBoard.set(move.square, move.piece);
-
-		return NTTTBoard(newBoard, !player);
-	}
-
-	std::vector<NTTTMove> LegalMoves()
-	{
-		std::vector<int> even = evens;
-		std::vector<int> odd = odds;
-
-		std::vector<NTTTMove> moves;
-		std::vector<int> empty;
-
-		for (int i = 0; i < 9; i++)
-		{
-			if ((int)board.get(i) != 0)
-			{
-				if ((int)board.get(i) % 2 == 0)
-					even.erase(std::remove(even.begin(), even.end(), (int)board.get(i)), even.end());
-				else
-					odd.erase(std::remove(odd.begin(), odd.end(), (int)board.get(i)), odd.end());
-			}
-			else
-				empty.push_back(i);
-		}
-
-		for (int i = 0; i < empty.size(); i++)
-		{
-			if (player)
-			{
-				for (int j = 0; j < even.size(); j++)
-					moves.push_back(NTTTMove(empty[i], even[j]));
-			}
-			else
-			{
-				for (int j = 0; j < odd.size(); j++)
-					moves.push_back(NTTTMove(empty[i], odd[j]));
-			}
-		}
-
-		return moves;
-	}
-
-	bool IsWin()
-	{
-		//check diagonal
-		if ((int)board.get(0) + (int)board.get(4) + (int)board.get(8) == 15 && (int)board.get(0) > 0 && (int)board.get(4) > 0 && (int)board.get(8) > 0)
-			return true;
-		if ((int)board.get(2) + (int)board.get(4) + (int)board.get(6) == 15 && (int)board.get(2) > 0 && (int)board.get(4) > 0 && (int)board.get(6) > 0)
-			return true;
-
-		//check horizontal
-		if ((int)board.get(0) + (int)board.get(1) + (int)board.get(2) == 15 && (int)board.get(0) > 0 && (int)board.get(1) > 0 && (int)board.get(2) > 0)
-			return true;
-		if ((int)board.get(3) + (int)board.get(4) + (int)board.get(5) == 15 && (int)board.get(3) > 0 && (int)board.get(4) > 0 && (int)board.get(5) > 0)
-			return true;
-		if ((int)board.get(6) + (int)board.get(7) + (int)board.get(8) == 15 && (int)board.get(6) > 0 && (int)board.get(7) > 0 && (int)board.get(8) > 0)
-			return true;
-
-		//check vertical
-		if ((int)board.get(0) + (int)board.get(3) + (int)board.get(6) == 15 && (int)board.get(0) > 0 && (int)board.get(3) > 0 && (int)board.get(6) > 0)
-			return true;
-		if ((int)board.get(1) + (int)board.get(4) + (int)board.get(7) == 15 && (int)board.get(1) > 0 && (int)board.get(4) > 0 && (int)board.get(7) > 0)
-			return true;
-		if ((int)board.get(2) + (int)board.get(5) + (int)board.get(8) == 15 && (int)board.get(2) > 0 && (int)board.get(5) > 0 && (int)board.get(8) > 0)
-			return true;
-
-		return false;
-	}
-
-	int NumEmptySpace()
-	{
-		int numEmpty = 0;
-		for (int i = 0; i < 9; i++)
-		{
-			if (board.get(i) == 0)
-				numEmpty++;
-		}
-
-		return numEmpty;
-	}
-
-	bool IsDraw()
-	{
-		return (!IsWin() && LegalMoves().size() == 0);
-	}
-
-	float Evaluate(bool player)
-	{
-		if (IsWin() && this->player == player)
-			return -1.0f * (NumEmptySpace() + 1);
-		else if (IsWin() && this->player != player)
-			return (NumEmptySpace() + 1);
-		else
-			return 0;
-	}
-
-	void DisplayBoard()
-	{
-		int column = 0;
-		std::cout << "-----------" << std::endl;
-		for (int i = 0; i < 9; i++)
-		{
-			if (/*boardPosition[i]*/(int)board.get(i) == 0)
-				std::cout << "  ";
-			else
-				std::cout << " " << /*boardPosition[i]*/(int)board.get(i);
-
-			if (column >= 2)
-			{
-				column = 0;
-				std::cout << std::endl;
-				std::cout << "-----------" << std::endl;
-			}
-			else
-			{
-				column++;
-				std::cout << " |";
-			}
-		}
-	}
-};

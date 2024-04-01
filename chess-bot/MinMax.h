@@ -8,24 +8,24 @@
 #include <algorithm>
 #include "Board.h"
 
+#include "chess.hpp"
+
 static const int LARGE_NUM = 10000000;
 static const int MAX_NUM_BYTES = 134217728;
 static const float MAX_SEARCH_TIME = 5.0;
 
-template <typename board_t, typename move_t>
-	requires std::is_same<board_t, NTTTBoard>::value && std::is_same<move_t, NTTTMove>::value
 class MinMax
 {
 public:
 	//template <typename T>
-	static float MiniMax(board_t board, bool maximizing, bool originalPlayer, int maxDepth = 8)
+	static float MiniMax(ChessBoard board, bool maximizing, bool originalPlayer, int maxDepth = 8)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw() || maxDepth == 0)
 			return board.Evaluate(originalPlayer);
 
 		float result;
-		std::vector<move_t> moves = board.LegalMoves();
+		chess::Movelist moves = board.LegalMoves();
 
 		// recursive case - maximize your gains or minimize the opponent's gains
 		if (maximizing)
@@ -56,14 +56,14 @@ public:
 		}
 	}
 
-	static float AlphaBeta(board_t board, bool maximizing, bool originalPlayer, int maxDepth = 8, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
+	static float AlphaBeta(ChessBoard board, bool maximizing, bool originalPlayer, int maxDepth = 8, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw() || maxDepth == 0)
 			return board.Evaluate(originalPlayer);
 
 		float result;
-		std::vector<move_t> moves = board.LegalMoves();
+		chess::Movelist moves = board.LegalMoves();
 
 		// recursive case - maximize your gains or minimize the opponent's gains
 		if (maximizing)
@@ -96,25 +96,25 @@ public:
 		}
 	}
 
-	static float AlphaBetaStack(board_t board, bool maximizing, bool originalPlayer, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
+	static float AlphaBetaStack(ChessBoard board, bool maximizing, bool originalPlayer, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw())
 			return board.Evaluate(originalPlayer);
 
-		std::unordered_map<NTTT, bool> visited;
-		std::stack<board_t> boardStack;
+		std::unordered_map<ChessBoard, bool> visited;
+		std::stack<ChessBoard> boardStack;
 		boardStack.push(board);
 		visited.emplace(board.board, true);
-		board_t currentBoard, tmpBoard;
+		ChessBoard currentBoard, tmpBoard;
 
 		float result;
 
-		std::vector<NTTTMove> moves;// = board.LegalMoves();
+		chess::Movelist moves;// = board.LegalMoves();
 
 		std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 
-		while (!boardStack.empty() || sizeof(boardStack) + (boardStack.size() * sizeof(board_t)) > MAX_NUM_BYTES)
+		while (!boardStack.empty() || sizeof(boardStack) + (boardStack.size() * sizeof(ChessBoard)) > MAX_NUM_BYTES)
 		{
 			if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTime).count() >= MAX_SEARCH_TIME * 1000)
 				break;
@@ -176,7 +176,7 @@ public:
 			return beta;
 	}
 
-	static void AlphaBetaStackThread(board_t board, bool maximizing, bool originalPlayer, float& result, float alpha, float beta)
+	static void AlphaBetaStackThread(ChessBoard board, bool maximizing, bool originalPlayer, float& result, float alpha, float beta)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw())
@@ -185,19 +185,19 @@ public:
 			return;
 		}
 
-		std::unordered_map<NTTT, bool> visited;
-		std::stack<board_t> boardStack;
+		std::unordered_map<ChessBoard, bool> visited;
+		std::stack<ChessBoard> boardStack;
 		boardStack.push(board);
 		visited.emplace(board.board, true);
-		board_t currentBoard, tmpBoard;
+		ChessBoard currentBoard, tmpBoard;
 
 		float score;
 
-		std::vector<NTTTMove> moves;// = board.LegalMoves();
+		chess::Movelist moves;// = board.LegalMoves();
 
 		std::chrono::high_resolution_clock::time_point startTime = std::chrono::high_resolution_clock::now();
 
-		while (!boardStack.empty() || sizeof(boardStack) + (boardStack.size() * sizeof(board_t)) > MAX_NUM_BYTES)
+		while (!boardStack.empty() || sizeof(boardStack) + (boardStack.size() * sizeof(ChessBoard)) > MAX_NUM_BYTES)
 		{
 			if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTime).count() >= MAX_SEARCH_TIME * 1000)
 				break;
@@ -257,12 +257,12 @@ public:
 			result = beta;
 	}
 
-	static move_t FindBestMove(board_t board)
+	static chess::Move FindBestMove(ChessBoard board)
 	{
 		float bestEval = -LARGE_NUM;
-		move_t bestMove;
+		chess::Move bestMove;
 
-		std::vector<move_t> moves = board.LegalMoves();
+		chess::Movelist moves = board.LegalMoves();
 		std::vector<float> results;
 		std::vector<std::thread> threads;
 
@@ -277,7 +277,7 @@ public:
 
 		// Start all threads and place them in the vector
 		for (int i = 0; i < moves.size(); i++)
-			threads.emplace_back(std::thread(&MinMax::AlphaBetaStackThread, board.MakeMove(moves[i]), false, board.player, std::ref(results[i]), -LARGE_NUM, LARGE_NUM));
+			threads.emplace_back(std::thread(&MinMax::AlphaBetaStackThread, board.MakeMove(moves[i]), false, board.board.sideToMove(), std::ref(results[i]), -LARGE_NUM, LARGE_NUM));
 
 		for (int i = 0; i < threads.size(); i++)
 			threads[i].join();
