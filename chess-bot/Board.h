@@ -171,22 +171,22 @@ public:
 		return result.second == chess::GameResult::DRAW;
 	}
 
-	float Evaluate(bool player)
+	float Evaluate(chess::Color player)
 	{
 		//TODO
 		//Implement an evaluation function
 		float val = 0;
-		chess::Color thisCol = board.sideToMove();
 
-		val += board.pieces(chess::PieceType::PAWN, thisCol).count() * PieceValues::PAWN;
-		val += board.pieces(chess::PieceType::ROOK, thisCol).count() * PieceValues::ROOK;
-		val += board.pieces(chess::PieceType::KNIGHT, thisCol).count() * PieceValues::KNIGHT;
-		val += board.pieces(chess::PieceType::BISHOP, thisCol).count() * PieceValues::BISHOP;
-		val += board.pieces(chess::PieceType::QUEEN, thisCol).count() * PieceValues::QUEEN;
-		val += board.pieces(chess::PieceType::KING, thisCol).count() * PieceValues::KING;
+		//Summed score of our remaining pieces
+		val += board.pieces(chess::PieceType::PAWN, player).count() * PieceValues::PAWN;
+		val += board.pieces(chess::PieceType::ROOK, player).count() * PieceValues::ROOK;
+		val += board.pieces(chess::PieceType::KNIGHT, player).count() * PieceValues::KNIGHT;
+		val += board.pieces(chess::PieceType::BISHOP, player).count() * PieceValues::BISHOP;
+		val += board.pieces(chess::PieceType::QUEEN, player).count() * PieceValues::QUEEN;
+		val += board.pieces(chess::PieceType::KING, player).count() * PieceValues::KING;
 
-		chess::Color otherCol = !thisCol;
-
+		//Summed score of opponent's remaining pieces subtracted from ours
+		chess::Color otherCol = !player;
 		val -= board.pieces(chess::PieceType::PAWN, otherCol).count() * PieceValues::PAWN;
 		val -= board.pieces(chess::PieceType::ROOK, otherCol).count() * PieceValues::ROOK;
 		val -= board.pieces(chess::PieceType::KNIGHT, otherCol).count() * PieceValues::KNIGHT;

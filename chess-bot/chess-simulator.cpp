@@ -33,7 +33,7 @@ std::string ChessSimulator::Move(std::string fen) {
 
 	ChessBoard chBoard = ChessBoard(chess::Board(fen));
 
-	//Black moves randomly
+	////Black moves randomly
 	//if (chBoard.board.sideToMove() == chess::Color::BLACK)
 	//{
 	//	chess::Movelist moves;
@@ -46,10 +46,15 @@ std::string ChessSimulator::Move(std::string fen) {
 	//	std::mt19937 gen(rd());
 	//	std::uniform_int_distribution<> dist(0, moves.size() - 1);
 	//	auto mv = moves[dist(gen)];
+	//	std::cout << "BLACK: " << chess::uci::moveToUci(mv) << std::endl;
 	//	return chess::uci::moveToUci(mv);
 	//}
 
+	float score = 0;
+
 	//White uses minmax
-	chess::Move move = MinMax::FindBestMove(chBoard);
+	chess::Move move = MinMax::FindBestMove(chBoard, score);
+	std::cout << (chBoard.board.sideToMove() == chess::Color::WHITE ? "WHITE: " : "BLACK: ") << chess::uci::moveToUci(move) 
+		<< "   " << std::to_string(score) << std::endl;
 	return chess::uci::moveToUci(move);
 }

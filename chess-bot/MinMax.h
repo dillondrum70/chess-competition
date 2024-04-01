@@ -18,7 +18,7 @@ class MinMax
 {
 public:
 	//template <typename T>
-	static float MiniMax(ChessBoard board, bool maximizing, bool originalPlayer, int maxDepth = 8)
+	static float MiniMax(ChessBoard board, bool maximizing, chess::Color originalPlayer, int maxDepth = 8)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw() || maxDepth == 0)
@@ -56,7 +56,7 @@ public:
 		}
 	}
 
-	static float AlphaBeta(ChessBoard board, bool maximizing, bool originalPlayer, int maxDepth = 8, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
+	static float AlphaBeta(ChessBoard board, bool maximizing, chess::Color originalPlayer, int maxDepth = 8, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw() || maxDepth == 0)
@@ -96,7 +96,7 @@ public:
 		}
 	}
 
-	static float AlphaBetaStack(ChessBoard board, bool maximizing, bool originalPlayer, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
+	static float AlphaBetaStack(ChessBoard board, bool maximizing, chess::Color originalPlayer, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw())
@@ -176,7 +176,7 @@ public:
 			return beta;
 	}
 
-	static void AlphaBetaStackThread(ChessBoard board, bool maximizing, bool originalPlayer, float& result, float alpha, float beta)
+	static void AlphaBetaStackThread(ChessBoard board, bool maximizing, chess::Color originalPlayer, float& result, float alpha, float beta)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw())
@@ -257,7 +257,7 @@ public:
 			result = beta;
 	}
 
-	static chess::Move FindBestMove(ChessBoard board)
+	static chess::Move FindBestMove(ChessBoard board, float& score)
 	{
 		float bestEval = -LARGE_NUM;
 		chess::Move bestMove;
@@ -291,6 +291,7 @@ public:
 			}
 		}
 
+		score = bestEval;
 		return bestMove;
 	}
 };
