@@ -17,7 +17,6 @@ static const float MAX_SEARCH_TIME = 5.0;
 class MinMax
 {
 public:
-	//template <typename T>
 	static float MiniMax(ChessBoard board, bool maximizing, chess::Color originalPlayer, int maxDepth = 8)
 	{
 		// best case reached
@@ -277,7 +276,9 @@ public:
 
 		// Start all threads and place them in the vector
 		for (int i = 0; i < moves.size(); i++)
+		{
 			threads.emplace_back(std::thread(&MinMax::AlphaBetaStackThread, board.MakeMove(moves[i]), false, board.board.sideToMove(), std::ref(results[i]), -LARGE_NUM, LARGE_NUM));
+		}
 
 		for (int i = 0; i < threads.size(); i++)
 			threads[i].join();

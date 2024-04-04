@@ -157,6 +157,18 @@ public:
 		return moveList;
 	}
 
+	int NumAvailableAttacks(chess::Color player)
+	{
+		//if (player == chess::Color::WHITE)
+
+		int numAttacks = 0;
+		for (int i = 0; i < 64; i++)
+			if (board.isAttacked(chess::Square(i), player))
+				numAttacks++;
+		
+		return numAttacks;
+	}
+
 	bool IsWin()
 	{
 		auto result = board.isGameOver();
@@ -194,7 +206,9 @@ public:
 		val -= board.pieces(chess::PieceType::QUEEN, otherCol).count() * PieceValues::QUEEN;
 		val -= board.pieces(chess::PieceType::KING, otherCol).count() * PieceValues::KING;
 
-		
+		//Check number of attacks both side can make
+		val -= NumAvailableAttacks(player);
+		val += NumAvailableAttacks(otherCol);
 		//std::cout << val << "\n";
 
 		return val;
