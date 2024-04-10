@@ -160,12 +160,34 @@ public:
 	int NumAvailableAttacks(chess::Color player)
 	{
 		//if (player == chess::Color::WHITE)
+		//std::cout << board.getFen() << std::endl;
 
-		int numAttacks = 0;
-		for (int i = 0; i < 64; i++)
-			if (board.isAttacked(chess::Square(i), player))
-				numAttacks++;
-		
+		std::string fen = board.getFen();
+		int numAttacks = 0, boardPos = 0;
+		char ch;
+		for (int i = 0; boardPos < 64; i++)
+		{
+			ch = fen[i];
+
+			if (std::isdigit(ch))// If it is a number, skip
+				boardPos += int(ch - '0');
+			else if (ch != '/')
+			{
+				if ((!std::isupper(ch) && player == chess::Color::WHITE) || (std::isupper(ch) && player == chess::Color::BLACK)) // If White check no white spaces are attacked
+				{
+					if (board.isAttacked(chess::Square(boardPos), player))
+						numAttacks++;
+				}
+				//else if (std::isupper(ch) && player == chess::Color::BLACK)
+				//{
+				//	if (board.isAttacked(chess::Square(boardPos), player))
+				//		numAttacks++;
+				//}
+					//board.isAttacked(chess::Square(boardPos), player);
+				boardPos++;
+			}
+		}
+		//std::cout << numAttacks << std::endl;
 		return numAttacks;
 	}
 
@@ -199,12 +221,12 @@ public:
 
 		//Summed score of opponent's remaining pieces subtracted from ours
 		chess::Color otherCol = !player;
-		val -= board.pieces(chess::PieceType::PAWN, otherCol).count() * PieceValues::PAWN;
-		val -= board.pieces(chess::PieceType::ROOK, otherCol).count() * PieceValues::ROOK;
-		val -= board.pieces(chess::PieceType::KNIGHT, otherCol).count() * PieceValues::KNIGHT;
-		val -= board.pieces(chess::PieceType::BISHOP, otherCol).count() * PieceValues::BISHOP;
-		val -= board.pieces(chess::PieceType::QUEEN, otherCol).count() * PieceValues::QUEEN;
-		val -= board.pieces(chess::PieceType::KING, otherCol).count() * PieceValues::KING;
+		val -= 2 * board.pieces(chess::PieceType::PAWN, otherCol).count() * PieceValues::PAWN;
+		val -= 2 * board.pieces(chess::PieceType::ROOK, otherCol).count() * PieceValues::ROOK;
+		val -= 2 * board.pieces(chess::PieceType::KNIGHT, otherCol).count() * PieceValues::KNIGHT;
+		val -= 2 * board.pieces(chess::PieceType::BISHOP, otherCol).count() * PieceValues::BISHOP;
+		val -= 2 * board.pieces(chess::PieceType::QUEEN, otherCol).count() * PieceValues::QUEEN;
+		val -= 2 * board.pieces(chess::PieceType::KING, otherCol).count() * PieceValues::KING;
 
 		//Check number of attacks both side can make
 		val -= NumAvailableAttacks(player);
