@@ -153,7 +153,7 @@ public:
 	{
 		chess::Movelist moveList;
 		chess::movegen::legalmoves(moveList, board);
-
+		
 		return moveList;
 	}
 
@@ -176,7 +176,33 @@ public:
 				if ((!std::isupper(ch) && player == chess::Color::WHITE) || (std::isupper(ch) && player == chess::Color::BLACK)) // If White check no white spaces are attacked
 				{
 					if (board.isAttacked(chess::Square(boardPos), player))
-						numAttacks++;
+					{
+						ch = std::tolower(ch);
+
+						switch (ch)
+						{
+						case 'p':
+							numAttacks += PAWN;
+							break;
+						case 'r':
+							numAttacks += ROOK;
+							break;
+						case 'n':
+							numAttacks += KNIGHT;
+							break;
+						case 'b':
+							numAttacks += BISHOP;
+							break;
+						case 'q':
+							numAttacks += QUEEN;
+							break;
+						case 'k':
+							numAttacks += KING;
+							break;
+						default:
+							std::cout << "Default, not good\n";
+						}
+					}
 				}
 				//else if (std::isupper(ch) && player == chess::Color::BLACK)
 				//{
@@ -212,25 +238,34 @@ public:
 		float val = 0;
 
 		//Summed score of our remaining pieces
-		val += board.pieces(chess::PieceType::PAWN, player).count() * PieceValues::PAWN;
+		/*val += board.pieces(chess::PieceType::PAWN, player).count() * PieceValues::PAWN;
 		val += board.pieces(chess::PieceType::ROOK, player).count() * PieceValues::ROOK;
 		val += board.pieces(chess::PieceType::KNIGHT, player).count() * PieceValues::KNIGHT;
 		val += board.pieces(chess::PieceType::BISHOP, player).count() * PieceValues::BISHOP;
 		val += board.pieces(chess::PieceType::QUEEN, player).count() * PieceValues::QUEEN;
-		val += board.pieces(chess::PieceType::KING, player).count() * PieceValues::KING;
+		val += board.pieces(chess::PieceType::KING, player).count() * PieceValues::KING;*/
 
 		//Summed score of opponent's remaining pieces subtracted from ours
 		chess::Color otherCol = !player;
-		val -= 2 * board.pieces(chess::PieceType::PAWN, otherCol).count() * PieceValues::PAWN;
-		val -= 2 * board.pieces(chess::PieceType::ROOK, otherCol).count() * PieceValues::ROOK;
-		val -= 2 * board.pieces(chess::PieceType::KNIGHT, otherCol).count() * PieceValues::KNIGHT;
-		val -= 2 * board.pieces(chess::PieceType::BISHOP, otherCol).count() * PieceValues::BISHOP;
-		val -= 2 * board.pieces(chess::PieceType::QUEEN, otherCol).count() * PieceValues::QUEEN;
-		val -= 2 * board.pieces(chess::PieceType::KING, otherCol).count() * PieceValues::KING;
+		/*val -= board.pieces(chess::PieceType::PAWN, otherCol).count() * PieceValues::PAWN;
+		val -= board.pieces(chess::PieceType::ROOK, otherCol).count() * PieceValues::ROOK;
+		val -= board.pieces(chess::PieceType::KNIGHT, otherCol).count() * PieceValues::KNIGHT;
+		val -= board.pieces(chess::PieceType::BISHOP, otherCol).count() * PieceValues::BISHOP;
+		val -= board.pieces(chess::PieceType::QUEEN, otherCol).count() * PieceValues::QUEEN;
+		val -= board.pieces(chess::PieceType::KING, otherCol).count() * PieceValues::KING;*/
+		
+		//val += LegalMoves().size();
+		val = (PieceValues::KING * (board.pieces(chess::PieceType::KING, player).count() - board.pieces(chess::PieceType::KING, otherCol).count())) +
+			(PieceValues::QUEEN * (board.pieces(chess::PieceType::QUEEN, player).count() - board.pieces(chess::PieceType::QUEEN, otherCol).count())) +
+			(PieceValues::ROOK * (board.pieces(chess::PieceType::ROOK, player).count() - board.pieces(chess::PieceType::ROOK, otherCol).count())) +
+			(PieceValues::BISHOP * (board.pieces(chess::PieceType::BISHOP, player).count() - board.pieces(chess::PieceType::BISHOP, otherCol).count())) +
+			(PieceValues::KNIGHT * (board.pieces(chess::PieceType::KNIGHT, player).count() - board.pieces(chess::PieceType::KNIGHT, otherCol).count())) +
+			(PieceValues::PAWN * (board.pieces(chess::PieceType::PAWN, player).count() - board.pieces(chess::PieceType::PAWN, otherCol).count())) +
+			(0.1f * LegalMoves().size());
 
 		//Check number of attacks both side can make
-		val -= NumAvailableAttacks(player);
-		val += NumAvailableAttacks(otherCol);
+		//val -= NumAvailableAttacks(player);
+		//val += NumAvailableAttacks(otherCol);
 		//std::cout << val << "\n";
 
 		return val;
