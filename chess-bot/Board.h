@@ -253,7 +253,7 @@ public:
 		val -= board.pieces(chess::PieceType::BISHOP, otherCol).count() * PieceValues::BISHOP;
 		val -= board.pieces(chess::PieceType::QUEEN, otherCol).count() * PieceValues::QUEEN;
 		val -= board.pieces(chess::PieceType::KING, otherCol).count() * PieceValues::KING;*/
-		
+
 		//val += LegalMoves().size();
 		val = (PieceValues::KING * (board.pieces(chess::PieceType::KING, player).count() - board.pieces(chess::PieceType::KING, otherCol).count())) +
 			(PieceValues::QUEEN * (board.pieces(chess::PieceType::QUEEN, player).count() - board.pieces(chess::PieceType::QUEEN, otherCol).count())) +
@@ -264,7 +264,7 @@ public:
 			(0.1f * LegalMoves().size());
 
 		//Check number of attacks both side can make
-		//val -= NumAvailableAttacks(player);
+		//val += NumAvailableAttacks(player);
 		//val += NumAvailableAttacks(otherCol);
 		//std::cout << val << "\n";
 

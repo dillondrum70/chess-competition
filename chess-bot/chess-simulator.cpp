@@ -54,7 +54,7 @@ std::string ChessSimulator::Move(std::string fen) {
 
 	//White uses minmax
 	chess::Move move = MinMax::FindBestMove(chBoard, score);
-	std::cout << (chBoard.board.sideToMove() == chess::Color::WHITE ? "WHITE: " : "BLACK: ") << chess::uci::moveToUci(move) 
-		<< "   " << std::to_string(score) << std::endl;
+	/*std::cout << (chBoard.board.sideToMove() == chess::Color::WHITE ? "WHITE: " : "BLACK: ") << chess::uci::moveToUci(move) 
+		<< "   " << std::to_string(score) << std::endl;*/
 	return chess::uci::moveToUci(move);
 }
