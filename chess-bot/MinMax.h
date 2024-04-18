@@ -95,19 +95,21 @@ public:
 		}
 	}
 
-	static float AlphaBetaStack(ChessBoard board, bool maximizing, chess::Color originalPlayer, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
+	static void AlphaBetaStack(ChessBoard board, bool maximizing, chess::Color originalPlayer, float& result, float alpha = -LARGE_NUM, float beta = LARGE_NUM)
 	{
 		// best case reached
 		if (board.IsWin() || board.IsDraw())
-			return board.Evaluate(originalPlayer);
+		{
+			result = board.Evaluate(originalPlayer);
+			return;
+		}
+			
 
 		std::unordered_map<ChessBoard, bool> visited;
 		std::stack<ChessBoard> boardStack;
 		boardStack.push(board);
 		visited.emplace(board.board, true);
 		ChessBoard currentBoard, tmpBoard;
-
-		float result;
 
 		chess::Movelist moves;// = board.LegalMoves();
 
@@ -170,9 +172,15 @@ public:
 		}
 
 		if (maximizing)
-			return alpha;
+		{
+			result = alpha;
+			return;
+		}
 		else
-			return beta;
+		{
+			result = beta;
+			return;
+		}
 	}
 
 	static void AlphaBetaStackThread(ChessBoard board, bool maximizing, chess::Color originalPlayer, float& result, float alpha, float beta)
@@ -277,7 +285,7 @@ public:
 		// Start all threads and place them in the vector
 		for (int i = 0; i < moves.size(); i++)
 		{
-			threads.emplace_back(std::thread(&MinMax::AlphaBetaStackThread, board.MakeMove(moves[i]), false, board.board.sideToMove(), std::ref(results[i]), -LARGE_NUM, LARGE_NUM));
+			threads.emplace_back(std::thread(&MinMax::AlphaBetaStack, board.MakeMove(moves[i]), false, board.board.sideToMove(), std::ref(results[i]), -LARGE_NUM, LARGE_NUM));
 		}
 
 		for (int i = 0; i < threads.size(); i++)

@@ -177,31 +177,7 @@ public:
 				{
 					if (board.isAttacked(chess::Square(boardPos), player))
 					{
-						ch = std::tolower(ch);
-
-						switch (ch)
-						{
-						case 'p':
-							numAttacks += PAWN;
-							break;
-						case 'r':
-							numAttacks += ROOK;
-							break;
-						case 'n':
-							numAttacks += KNIGHT;
-							break;
-						case 'b':
-							numAttacks += BISHOP;
-							break;
-						case 'q':
-							numAttacks += QUEEN;
-							break;
-						case 'k':
-							numAttacks += KING;
-							break;
-						default:
-							std::cout << "Default, not good\n";
-						}
+						numAttacks += 1;
 					}
 				}
 				//else if (std::isupper(ch) && player == chess::Color::BLACK)
