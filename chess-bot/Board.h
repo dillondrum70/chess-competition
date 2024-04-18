@@ -7,6 +7,11 @@
 //std::vector<int> evens = { 2, 4, 6, 8 };
 //std::vector<int> odds = { 1, 3, 5, 7, 9 };
 
+/////// WEIGHTS
+const float MATERIAL_ADVANTAGE_WEIGHT = 1.f;	//Weight applied to part of score tracking how many pieces are on the board
+const float ATTACKING_WEIGHT = .5f;				//Weight applied to part of score tracking how many spaces are attacked by each side
+
+
 enum PieceValues
 {
 	EMPTY = 0,
@@ -17,96 +22,6 @@ enum PieceValues
 	QUEEN = 9,
 	KING = 500,
 };
-
-//class Move
-//{
-//public:
-//	int square;
-//	int piece;
-//
-//	/*bool operator==(const Move& other)
-//	{
-//		return (square == other.square) && (piece == other.piece);
-//	}*/
-//};
-//
-//class ChessMove : public Move
-//{
-//public:
-//	ChessMove()
-//	{
-//		square = 0;
-//		piece = 0;
-//	}
-//
-//	ChessMove(int square, int piece)
-//	{
-//		this->square = square;
-//		this->piece = piece;
-//	}
-//
-//	bool operator==(const ChessMove& other)
-//	{
-//		return (square == other.square) && (piece == other.piece);
-//	}
-//};
-//
-//// numbers can from 0 to 9 so we need 4 bits for every number
-//struct Chess
-//{
-//	// 64 bits to store the whole board
-//	// 9 numbers * 4 bits = only 36 bits are required
-//	uint64_t board = 0;
-//
-//	// numbers can go from 0 to 9
-//	uint8_t get(size_t index)
-//	{
-//		return (board >> (index * 4)) & 0b1111;
-//	}
-//
-//	void set(size_t index, uint8_t value)
-//	{
-//		board &= ~(0b1111ull << (index * 4));
-//		board |= (uint64_t(value) << (index * 4));
-//	}
-//
-//	void operator=(const Chess& rhs)
-//	{
-//		board = rhs.board;
-//	}
-//
-//	bool operator==(const Chess& rhs)
-//	{
-//		return board == rhs.board;
-//	}
-//
-//	friend bool operator==(const Chess& lhs, const Chess& rhs)
-//	{
-//		return lhs.board == rhs.board;
-//	}
-//
-//	friend std::ostream& operator<<(std::ostream& out, const Chess& board)
-//	{
-//		out << board.board;
-//		return out;
-//	}
-//};
-
-
-//class GenericBoard
-//{
-//public:
-//	bool player; // true = even, false = odd
-//
-//	virtual chess::Board MakeMove(chess::Move move) = 0;
-//
-//	virtual std::vector<chess::Move> LegalMoves() = 0;
-//
-//	virtual bool IsWin() = 0;
-//	virtual bool IsDraw() = 0;
-//	virtual float Evaluate(bool player) = 0;
-//	virtual void DisplayBoard() = 0;
-//};
 
 class ChessBoard
 {
@@ -162,32 +77,16 @@ public:
 		//if (player == chess::Color::WHITE)
 		//std::cout << board.getFen() << std::endl;
 
-		std::string fen = board.getFen();
 		int numAttacks = 0, boardPos = 0;
-		char ch;
 		for (int i = 0; boardPos < 64; i++)
 		{
-			ch = fen[i];
-
-			if (std::isdigit(ch))// If it is a number, skip
-				boardPos += int(ch - '0');
-			else if (ch != '/')
+			//ch = fen[i];
+			if (board.isAttacked(chess::Square(i), player))
 			{
-				if ((!std::isupper(ch) && player == chess::Color::WHITE) || (std::isupper(ch) && player == chess::Color::BLACK)) // If White check no white spaces are attacked
-				{
-					if (board.isAttacked(chess::Square(boardPos), player))
-					{
-						numAttacks += 1;
-					}
-				}
-				//else if (std::isupper(ch) && player == chess::Color::BLACK)
-				//{
-				//	if (board.isAttacked(chess::Square(boardPos), player))
-				//		numAttacks++;
-				//}
-					//board.isAttacked(chess::Square(boardPos), player);
-				boardPos++;
+				numAttacks += 1;
 			}
+			
+			boardPos++;
 		}
 		//std::cout << numAttacks << std::endl;
 		return numAttacks;
@@ -231,18 +130,19 @@ public:
 		val -= board.pieces(chess::PieceType::KING, otherCol).count() * PieceValues::KING;*/
 
 		//val += LegalMoves().size();
-		val = (PieceValues::KING * (board.pieces(chess::PieceType::KING, player).count() - board.pieces(chess::PieceType::KING, otherCol).count())) +
+		val = ((PieceValues::KING * (board.pieces(chess::PieceType::KING, player).count() - board.pieces(chess::PieceType::KING, otherCol).count())) +
 			(PieceValues::QUEEN * (board.pieces(chess::PieceType::QUEEN, player).count() - board.pieces(chess::PieceType::QUEEN, otherCol).count())) +
 			(PieceValues::ROOK * (board.pieces(chess::PieceType::ROOK, player).count() - board.pieces(chess::PieceType::ROOK, otherCol).count())) +
 			(PieceValues::BISHOP * (board.pieces(chess::PieceType::BISHOP, player).count() - board.pieces(chess::PieceType::BISHOP, otherCol).count())) +
 			(PieceValues::KNIGHT * (board.pieces(chess::PieceType::KNIGHT, player).count() - board.pieces(chess::PieceType::KNIGHT, otherCol).count())) +
 			(PieceValues::PAWN * (board.pieces(chess::PieceType::PAWN, player).count() - board.pieces(chess::PieceType::PAWN, otherCol).count())) +
-			(0.1f * LegalMoves().size());
+			(0.1f * LegalMoves().size())) * MATERIAL_ADVANTAGE_WEIGHT;
 
 		//Check number of attacks both side can make
-		//val += NumAvailableAttacks(player);
-		//val += NumAvailableAttacks(otherCol);
-		//std::cout << val << "\n";
+		int ourAttacks = NumAvailableAttacks(player);
+		int opponentAttacks = NumAvailableAttacks(otherCol);
+		//std::cout << num1 << "   " << num2 << std::endl;
+		val += (ourAttacks - opponentAttacks) * ATTACKING_WEIGHT;
 
 		return val;
 	}
